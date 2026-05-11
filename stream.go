@@ -2,6 +2,7 @@ package gollama
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"io"
 	"iter"
@@ -48,6 +49,10 @@ func streamResponse[T any, L any](responseExec func() (*http.Response, error), m
 
 		for scanner.Scan() {
 			b := scanner.Bytes()
+
+			if len(bytes.TrimSpace(b)) == 0 {
+				continue
+			}
 
 			var line L
 			if err = json.Unmarshal(b, &line); err != nil {
