@@ -16,10 +16,11 @@ const ollamaCloudURL = "https://ollama.com/api"
 
 // Client represents a client for the Ollama API.
 type Client struct {
-	baseURL string
-	apiKey  string
-	client  *http.Client
-	logger  *slog.Logger
+	baseURL      string
+	apiKey       string
+	client       *http.Client
+	streamClient *http.Client
+	logger       *slog.Logger
 }
 
 // NewClient creates a new Ollama client.
@@ -55,6 +56,10 @@ func NewClient(opts ...OptionFunc) (*Client, error) {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: o.timeout}
 	}
+	streamClient := &http.Client{
+		Transport: httpClient.Transport,
+		Timeout:   0,
+	}
 
 	var logger *slog.Logger
 	if o.logger == nil {
@@ -64,10 +69,11 @@ func NewClient(opts ...OptionFunc) (*Client, error) {
 	}
 
 	return &Client{
-		baseURL: baseURL,
-		apiKey:  o.apiKey,
-		client:  httpClient,
-		logger:  logger,
+		baseURL:      baseURL,
+		apiKey:       o.apiKey,
+		client:       httpClient,
+		streamClient: streamClient,
+		logger:       logger,
 	}, nil
 }
 
@@ -75,42 +81,7 @@ func NewClient(opts ...OptionFunc) (*Client, error) {
 // unmarshalling the response body into response if non-nil. Returns an *ErrorResponse if the server responds with a
 // non-200 status.
 func (c *Client) do(ctx context.Context, method, endpoint string, request any, response any) error {
-	endpointURL, err := url.JoinPath(c.baseURL, endpoint)
-	if err != nil {
-		return err
-	}
-
-	contentType := ""
-
-	var body io.Reader
-	if request != nil {
-		var reqBytes []byte
-		if reqBytes, err = json.Marshal(request); err != nil {
-			return err
-		}
-		body = bytes.NewReader(reqBytes)
-
-		c.logger.Debug("request body", "body", string(reqBytes))
-
-		contentType = "application/json"
-	}
-
-	c.logger.Debug("making request", "method", method, "url", endpointURL, "contentType", contentType)
-
-	req, err := http.NewRequestWithContext(ctx, method, endpointURL, body)
-	if err != nil {
-		return err
-	}
-
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
-	if c.apiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+c.apiKey)
-	}
-
-	res, err := c.client.Do(req)
+	res, err := c.execute(ctx, method, endpoint, request, false)
 	if err != nil {
 		return err
 	}
@@ -142,4 +113,56 @@ func (c *Client) do(ctx context.Context, method, endpoint string, request any, r
 	}
 
 	return nil
+}
+
+// executeStream executes an HTTP request against the given endpoint, marshalling the request as a JSON body if
+// non-nil, and returning the raw response of the HTTP request using the streaming client.
+func (c *Client) executeStream(ctx context.Context, method, endpoint string, request any) (*http.Response, error) {
+	return c.execute(ctx, method, endpoint, request, true)
+}
+
+// execute executes an HTTP request against the given endpoint, marshalling the request as a JSON body if non-nil,
+// and returning the raw response of the HTTP request, using either the non-stream or stream client (based on the bool
+// flag).
+func (c *Client) execute(ctx context.Context, method, endpoint string, request any, stream bool) (*http.Response, error) {
+	endpointURL, err := url.JoinPath(c.baseURL, endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	contentType := ""
+
+	var body io.Reader
+	if request != nil {
+		var reqBytes []byte
+		if reqBytes, err = json.Marshal(request); err != nil {
+			return nil, err
+		}
+		body = bytes.NewReader(reqBytes)
+
+		c.logger.Debug("request body", "body", string(reqBytes))
+
+		contentType = "application/json"
+	}
+
+	c.logger.Debug("making request", "method", method, "url", endpointURL, "contentType", contentType)
+
+	req, err := http.NewRequestWithContext(ctx, method, endpointURL, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+
+	if stream {
+		return c.streamClient.Do(req)
+	}
+
+	return c.client.Do(req)
 }

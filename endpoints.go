@@ -1,7 +1,11 @@
 package gollama
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"io"
+	"iter"
 	"net/http"
 )
 
@@ -66,13 +70,73 @@ func (c *Client) PullModel(ctx context.Context, request PullModelRequest) (*Pull
 }
 
 // PullModelStream streams pulling a model.
-func (c *Client) PullModelStream(ctx context.Context, request PullModelRequest) error {
-	// internalRequest := pullModelRequestWithStream{
-	// 	PullModelRequest: request,
-	// 	Stream:           true,
-	// }
+func (c *Client) PullModelStream(ctx context.Context, request PullModelRequest) iter.Seq2[*PullModelStatusUpdate, error] {
+	return func(yield func(*PullModelStatusUpdate, error) bool) {
+		internalRequest := pullModelRequestWithStream{
+			PullModelRequest: request,
+			Stream:           true,
+		}
+		res, err := c.executeStream(ctx, http.MethodPost, "/pull", internalRequest)
+		if err != nil {
+			yield(nil, err)
+			return
+		}
+		defer func(Body io.ReadCloser) {
+			if closeErr := Body.Close(); closeErr != nil {
+				c.logger.Error("error closing the response body", "error", closeErr)
+			}
+		}(res.Body)
 
-	return nil
+		c.logger.Debug("response", "statusCode", res.StatusCode)
+
+		if res.StatusCode != http.StatusOK {
+			var b []byte
+			if b, err = io.ReadAll(res.Body); err != nil {
+				yield(nil, err)
+				return
+			}
+
+			var errorResponse ErrorResponse
+			if err = json.Unmarshal(b, &errorResponse); err != nil {
+				yield(nil, err)
+				return
+			}
+
+			yield(nil, &errorResponse)
+			return
+		}
+
+		scanner := bufio.NewScanner(res.Body)
+
+		for scanner.Scan() {
+			b := scanner.Bytes()
+
+			var line pullModelLine
+			if err = json.Unmarshal(b, &line); err != nil {
+				yield(nil, err)
+				return
+			}
+
+			if line.Message != "" {
+				yield(nil, &ErrorResponse{Message: line.Message})
+				return
+			}
+
+			if !yield(&PullModelStatusUpdate{
+				Status:    line.Status,
+				Digest:    line.Digest,
+				Total:     line.Total,
+				Completed: line.Completed,
+			}, nil) {
+				return
+			}
+		}
+
+		if err = scanner.Err(); err != nil {
+			yield(nil, err)
+			return
+		}
+	}
 }
 
 // PushModel

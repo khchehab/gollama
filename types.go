@@ -1,7 +1,10 @@
 package gollama
 
+import "time"
+
 // ErrorResponse represents an error response from the Ollama API.
 type ErrorResponse struct {
+	// Message is the error message.
 	Message string `json:"error"`
 }
 
@@ -36,7 +39,7 @@ type GenerateEmbeddingRequestOption struct {
 	Seed int `json:"seed"`
 	// Temperature controls randomness in generation (higher = more random).
 	Temperature float64 `json:"temperature"`
-	// TopK limits next token selection to the K most likely.
+	// TopK limits the next token selection to the K most likely.
 	TopK int `json:"top_k"`
 	// TopP is the cumulative probability threshold for nucleus sampling.
 	TopP float64 `json:"top_p"`
@@ -56,10 +59,10 @@ type GenerateEmbeddingResponse struct {
 	Model string `json:"model"`
 	// Embeddings is the array of vector embeddings.
 	Embeddings [][]float64 `json:"embeddings"`
-	// TotalDuration is the total time spent generating in nanoseconds.
-	TotalDuration int `json:"total_duration"`
-	// LoadDuration is the load time in nanoseconds.
-	LoadDuration int `json:"load_duration"`
+	// TotalDuration is the total time spent generating.
+	TotalDuration time.Duration `json:"total_duration"`
+	// LoadDuration is the load time.
+	LoadDuration time.Duration `json:"load_duration"`
 	// PromptEvalCount is the number of input tokens processed to generate embeddings.
 	PromptEvalCount int `json:"prompt_eval_count"`
 }
@@ -82,8 +85,8 @@ type ModelInfo struct {
 	RemoteHost string `json:"remote_host"`
 	// ModifiedAt is the last modified timestamp in ISO 8601 format.
 	ModifiedAt string `json:"modified_at"`
-	// Size is the total size of the model on disk in bytes.
-	Size int `json:"size"`
+	// Size is the total size of the model on the disk in bytes.
+	Size int64 `json:"size"`
 	// Digest is the SHA256 digest identifier of the model contents.
 	Digest string `json:"digest"`
 	// Details is the additional information about the model's format and family.
@@ -117,7 +120,7 @@ type RunningModel struct {
 	// Model is the name of the running model.
 	Model string `json:"model"`
 	// Size is the size of the model in bytes.
-	Size int `json:"size"`
+	Size int64 `json:"size"`
 	// Digest is the SHA256 digest of the model.
 	Digest string `json:"digest"`
 	// Details is the model details such as format and family.
@@ -125,7 +128,7 @@ type RunningModel struct {
 	// ExpiresAt is the time when the model will be unloaded.
 	ExpiresAt string `json:"expires_at"`
 	// SizeVRAM is the VRAM usage in bytes.
-	SizeVRAM int `json:"size_vram"`
+	SizeVRAM int64 `json:"size_vram"`
 	// ContextLength is the context length for the running model.
 	ContextLength int `json:"context_length"`
 }
@@ -185,6 +188,32 @@ type pullModelRequestWithStream struct {
 type PullModelResponse struct {
 	// Status is the current status message.
 	Status string `json:"status"`
+}
+
+// PullModelStatusUpdate represents a status update during a streamed pull model.
+type PullModelStatusUpdate struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+}
+
+// pullModelLine represents a line of progress during a streamed pull model (can be either a status update or error response).
+type pullModelLine struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+	// Message is the error message.
+	Message string `json:"error"`
 }
 
 // PushModel
