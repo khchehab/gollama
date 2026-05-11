@@ -14,43 +14,43 @@ func (e *ErrorResponse) Error() string {
 
 // GenerateChatMessage
 
-// GenerateEmbeddingRequest represent the request to the /embed endpoint.
+// GenerateEmbeddingRequest represent the request to generate an embedding.
 type GenerateEmbeddingRequest struct {
 	// Model is the model name.
 	Model string `json:"model"`
 	// Input is the array of texts to generate embeddings for.
 	Input []string `json:"input"`
 	// Truncate if true, truncate inputs that exceed the context window. If false, returns an error.
-	Truncate bool `json:"truncate,omitempty"`
+	Truncate bool `json:"truncate"`
 	// Dimensions is the number of dimensions to generate embeddings for.
-	Dimensions int `json:"dimensions,omitempty"`
+	Dimensions int `json:"dimensions"`
 	// KeepAlive is the model keep-alive duration.
-	KeepAlive string `json:"keep_alive,omitempty"`
+	KeepAlive string `json:"keep_alive"`
 	// Options is the runtime options that control text generation.
-	Options GenerateEmbeddingRequestOption `json:"options,omitempty"`
+	Options GenerateEmbeddingRequestOption `json:"options"`
 }
 
 // GenerateEmbeddingRequestOption represents the runtime options that control the text generation.
 type GenerateEmbeddingRequestOption struct {
 	// Seed is the random seed used for reproducible outputs.
-	Seed int `json:"seed,omitempty"`
+	Seed int `json:"seed"`
 	// Temperature controls randomness in generation (higher = more random).
-	Temperature float64 `json:"temperature,omitempty"`
+	Temperature float64 `json:"temperature"`
 	// TopK limits next token selection to the K most likely.
-	TopK int `json:"top_k,omitempty"`
+	TopK int `json:"top_k"`
 	// TopP is the cumulative probability threshold for nucleus sampling.
-	TopP float64 `json:"top_p,omitempty"`
+	TopP float64 `json:"top_p"`
 	// MinP is the minimum probability threshold for token selection.
-	MinP float64 `json:"min_p,omitempty"`
+	MinP float64 `json:"min_p"`
 	// Stop is the stop sequences that will halt generation.
-	Stop []string `json:"stop,omitempty"`
+	Stop []string `json:"stop"`
 	// NumCtx is the context length size (number of tokens).
-	NumCtx int `json:"num_ctx,omitempty"`
+	NumCtx int `json:"num_ctx"`
 	// NumPredict is the maximum number of tokens to generate.
-	NumPredict int `json:"num_predict,omitempty"`
+	NumPredict int `json:"num_predict"`
 }
 
-// GenerateEmbeddingResponse represents the response from the /embed endpoint.
+// GenerateEmbeddingResponse represents the response from generating an embedding.
 type GenerateEmbeddingResponse struct {
 	// Model is the model that produced the embeddings
 	Model string `json:"model"`
@@ -64,7 +64,7 @@ type GenerateEmbeddingResponse struct {
 	PromptEvalCount int `json:"prompt_eval_count"`
 }
 
-// listModelResponse represents the response from the /tags endpoint.
+// listModelResponse represents the response from the list models.
 type listModelResponse struct {
 	// Models is the list of available models.
 	Models []ModelInfo `json:"models"`
@@ -104,7 +104,7 @@ type ModelInfoDetail struct {
 	QuantizationLevel string `json:"quantization_level"`
 }
 
-// runningModelsResponse represents the response from the /ps endpoint.
+// runningModelsResponse represents the response from the list running models.
 type runningModelsResponse struct {
 	// Models are the currently running models
 	Models []RunningModel `json:"models"`
@@ -130,15 +130,15 @@ type RunningModel struct {
 	ContextLength int `json:"context_length"`
 }
 
-// ShowModelDetailsRequest represents the request to the /show endpoint.
+// ShowModelDetailsRequest represents the request to get the model details.
 type ShowModelDetailsRequest struct {
 	// Model is the model name to show.
 	Model string `json:"model"`
 	// Verbose, if true, includes large verbose fields in the response.
-	Verbose bool `json:"verbose,omitempty"`
+	Verbose bool `json:"verbose"`
 }
 
-// ShowModelDetailsResponse represents the response from the /show endpoint.
+// ShowModelDetailsResponse represents the response from getting model details.
 type ShowModelDetailsResponse struct {
 	// Parameters is the model parameter settings serialized as text.
 	Parameters string `json:"parameters"`
@@ -166,7 +166,26 @@ type CopyModelRequest struct {
 	Destination string `json:"destination"`
 }
 
-// PullModel
+// PullModelRequest represents the request to pull a model.
+type PullModelRequest struct {
+	// Model is the name of the model to download.
+	Model string `json:"model"`
+	// Insecure allows downloading over insecure connections.
+	Insecure bool `json:"insecure"`
+}
+
+// pullModelRequestWithStream represents the request to pull a model witht he stream field (to be filled internally based on calling function).
+type pullModelRequestWithStream struct {
+	PullModelRequest
+	// Stream to stream progress updates.
+	Stream bool `json:"stream"`
+}
+
+// PullModelResponse represents the response from pulling a model.
+type PullModelResponse struct {
+	// Status is the current status message.
+	Status string `json:"status"`
+}
 
 // PushModel
 
@@ -176,7 +195,7 @@ type DeleteModelRequest struct {
 	Model string `json:"model"`
 }
 
-// versionResponse represents the response from the /version endpoint.
+// versionResponse represents the response from getting the version of the server.
 type versionResponse struct {
 	// Version is the version of Ollama.
 	Version string `json:"version"`

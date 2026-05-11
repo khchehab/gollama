@@ -52,7 +52,28 @@ func (c *Client) CopyModel(ctx context.Context, request CopyModelRequest) error 
 	return c.do(ctx, http.MethodPost, "/copy", request, nil)
 }
 
-// PullModel
+// PullModel pulls a model.
+func (c *Client) PullModel(ctx context.Context, request PullModelRequest) (*PullModelResponse, error) {
+	internalRequest := pullModelRequestWithStream{
+		PullModelRequest: request,
+		Stream:           false,
+	}
+	var response PullModelResponse
+	if err := c.do(ctx, http.MethodPost, "/pull", internalRequest, &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// PullModelStream streams pulling a model.
+func (c *Client) PullModelStream(ctx context.Context, request PullModelRequest) error {
+	// internalRequest := pullModelRequestWithStream{
+	// 	PullModelRequest: request,
+	// 	Stream:           true,
+	// }
+
+	return nil
+}
 
 // PushModel
 

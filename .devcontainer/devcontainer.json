@@ -5,12 +5,12 @@
 		"context": "."
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/git:1": {
-			"version": "latest"
-		},
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/git-lfs:1": {},
 		"ghcr.io/devcontainers/features/go:1": {},
 		"ghcr.io/prulloac/devcontainer-features/ollama:1": {}
 	},
+	"workspaceFolder": "/workspaces/gollama",
 	"postCreateCommand": "go version && gopls version && staticcheck -version && dlv version && goimports -help >/dev/null",
 	"customizations": {
 		"vscode": {

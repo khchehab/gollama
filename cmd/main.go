@@ -1,35 +1,50 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log/slog"
-	"os"
-
-	"github.com/khchehab/gollama"
+	"iter"
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
+	// logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	// 	Level: slog.LevelDebug,
+	// }))
 
-	logger.Info("Hello World!")
+	// logger.Info("Hello World!")
 
-	client, err := gollama.NewClient(gollama.WithLogger(logger))
-	if err != nil {
-		panic(err)
+	// client, err := gollama.NewClient(gollama.WithLogger(logger))
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// response, err := client.PullModel(context.Background(), gollama.PullModelRequest{
+	// 	Model: "nomic-embed-text:latest",
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println("response:", response)
+
+	// fmt.Println("Done!")
+
+	for i := range Count(10) {
+		fmt.Println("range over - i:", i)
+
+		if i > 5 {
+			break
+		}
 	}
+}
 
-	response, err := client.GenerateEmbeddings(context.Background(), gollama.GenerateEmbeddingRequest{
-		Model: "nomic-embed-text:latest",
-		Input: []string{"Query: Hello"},
-	})
-	if err != nil {
-		panic(err)
+func Count(n int) iter.Seq[int] {
+	return func(yield func(int) bool) {
+		for i := 0; i < n; i++ {
+			fmt.Println("DEBUG - i inside the yield:", i)
+			if !yield(i) {
+				fmt.Println("DEBUG - not yielded")
+				return
+			}
+		}
 	}
-
-	fmt.Println("response:", response)
-
-	fmt.Println("Done!")
 }
