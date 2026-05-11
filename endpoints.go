@@ -88,7 +88,40 @@ func (c *Client) PullModelStream(ctx context.Context, request PullModelRequest) 
 	}, c.logger)
 }
 
-// PushModel
+// PushModel pushes a model.
+func (c *Client) PushModel(ctx context.Context, request PushModelRequest) (*PushModelResponse, error) {
+	internalRequest := pushModelRequestWithStream{
+		PushModelRequest: request,
+		Stream:           false,
+	}
+	var response PushModelResponse
+	if err := c.do(ctx, http.MethodPost, "/push", internalRequest, &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// PushModelStream streams pushing a model.
+func (c *Client) PushModelStream(ctx context.Context, request PushModelRequest) iter.Seq2[*PushModelStatusUpdate, error] {
+	return streamResponse[PushModelStatusUpdate](func() (*http.Response, error) {
+		internalRequest := pushModelRequestWithStream{
+			PushModelRequest: request,
+			Stream:           true,
+		}
+		return c.executeStream(ctx, http.MethodPost, "/push", internalRequest)
+	}, func(line pushModelLine) (*PushModelStatusUpdate, error) {
+		if line.Message != "" {
+			return nil, &ErrorResponse{Message: line.Message}
+		}
+
+		return &PushModelStatusUpdate{
+			Status:    line.Status,
+			Digest:    line.Digest,
+			Total:     line.Total,
+			Completed: line.Completed,
+		}, nil
+	}, c.logger)
+}
 
 // DeleteModel deletes a model.
 func (c *Client) DeleteModel(ctx context.Context, request DeleteModelRequest) error {

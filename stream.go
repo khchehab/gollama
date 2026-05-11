@@ -9,6 +9,9 @@ import (
 	"net/http"
 )
 
+// streamResponse is a helper function to stream a response. It takes a function to execute the request and get the
+// raw HTTP response, a mapper function that maps from the intermediate line struct into the final struct, and finally
+// the client's logger to log some information.
 func streamResponse[T any, L any](responseExec func() (*http.Response, error), mapper func(L) (*T, error), logger *slog.Logger) iter.Seq2[*T, error] {
 	return func(yield func(*T, error) bool) {
 		res, err := responseExec()

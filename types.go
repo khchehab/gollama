@@ -177,7 +177,7 @@ type PullModelRequest struct {
 	Insecure bool `json:"insecure"`
 }
 
-// pullModelRequestWithStream represents the request to pull a model witht he stream field (to be filled internally based on calling function).
+// pullModelRequestWithStream represents the request to pull a model with the stream field (to be filled internally based on calling function).
 type pullModelRequestWithStream struct {
 	PullModelRequest
 	// Stream to stream progress updates.
@@ -216,7 +216,52 @@ type pullModelLine struct {
 	Message string `json:"error"`
 }
 
-// PushModel
+// PushModelRequest represents the request to push a model.
+type PushModelRequest struct {
+	// Model is the name of the model to publish.
+	Model string `json:"model"`
+	// Insecure allows publishing over insecure connections.
+	Insecure bool `json:"insecure"`
+}
+
+// pushModelRequestWithStream represents the request to push a model with the stream field (to be filled internally based on calling function).
+type pushModelRequestWithStream struct {
+	PushModelRequest
+	// Stream to stream progress updates.
+	Stream bool `json:"stream"`
+}
+
+// PushModelResponse represents the response from pushing a model.
+type PushModelResponse struct {
+	// Status is the current status message.
+	Status string `json:"status"`
+}
+
+// PushModelStatusUpdate represents a status update during a streamed push model.
+type PushModelStatusUpdate struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+}
+
+// pushModelLine represents a line of progress during a streamed push model (can be either a status update or error response).
+type pushModelLine struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+	// Message is the error message.
+	Message string `json:"error"`
+}
 
 // DeleteModelRequest represents the request to delete a model.
 type DeleteModelRequest struct {
