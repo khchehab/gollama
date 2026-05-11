@@ -159,7 +159,93 @@ type ShowModelDetailsResponse struct {
 	ModelInfo map[string]any `json:"model_info"`
 }
 
-// CreateModel
+// CreateModelRequest represents the request to create a model.
+type CreateModelRequest struct {
+	// Model is the name of the model to create.
+	Model string `json:"model"`
+	// From is the existing model to create from.
+	From string `json:"from"`
+	// Template is the prompt template to use for the model.
+	Template string `json:"template"`
+	// License is the list of licenses for the model.
+	License []string `json:"license"`
+	// System is the system prompt to embed in the model.
+	System string `json:"system"`
+	// Parameters is the key-value parameters for the model.
+	Parameters map[string]any `json:"parameters"`
+	// Messages is the message history to use for the model.
+	Messages []CreateModelRequestMessage `json:"messages"`
+	// Quantize is the quantization level to apply (e.g. q4_K_M, q8_0).
+	Quantize string `json:"quantize"`
+}
+
+// CreateModelRequestMessage represents a message history to use for the model.
+type CreateModelRequestMessage struct {
+	// Role is the author of the message.
+	Role MessageRole `json:"role"`
+	// Content is the message text content.
+	Content string `json:"content"`
+	// Images is an optional list of inline images for multimodal models.
+	// Each item will be a base64-encoded image content.
+	Images []string `json:"images"`
+	// ToolCalls is the tool call requests produced by the model.
+	ToolCalls []CreateModelRequestMessageToolCall `json:"tool_calls"`
+}
+
+// CreateModelRequestMessageToolCall represents a message tool call.
+type CreateModelRequestMessageToolCall struct {
+	// Function is the function call details.
+	Function CreateModelRequestMessageToolCallFunction `json:"function"`
+}
+
+// CreateModelRequestMessageToolCallFunction represents the function call details.
+type CreateModelRequestMessageToolCallFunction struct {
+	// Name of the function to call.
+	Name string `json:"name"`
+	// Description is what the function does.
+	Description string `json:"description"`
+	// Arguments is a map of arguments to pass to the function.
+	Arguments map[string]any `json:"arguments"`
+}
+
+// createModelRequestWithStream represents the request to create a model with the stream field (to be filled internally based on calling function).
+type createModelRequestWithStream struct {
+	CreateModelRequest
+	// Stream to stream progress updates.
+	Stream bool `json:"stream"`
+}
+
+// CreateModelResponse represents the response from creating a model.
+type CreateModelResponse struct {
+	// Status is the current status message.
+	Status string `json:"status"`
+}
+
+// CreateModelStatusUpdate represents a status update during a streamed create model.
+type CreateModelStatusUpdate struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+}
+
+// createModelLine represents a line of progress during a streamed create model (can be either a status update or error response).
+type createModelLine struct {
+	// Status is a human-readable status message.
+	Status string `json:"status"`
+	// Digest is the content digest associated with the status, if applicable.
+	Digest string `json:"digest"`
+	// Total is the total number of bytes expected for the operation.
+	Total int64 `json:"total"`
+	// Completed is the number of bytes transferred so far.
+	Completed int64 `json:"completed"`
+	// Message is the error message.
+	Message string `json:"error"`
+}
 
 // CopyModelRequest represents the request to copy a model.
 type CopyModelRequest struct {

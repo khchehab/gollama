@@ -46,7 +46,40 @@ func (c *Client) ShowModelDetails(ctx context.Context, request ShowModelDetailsR
 	return &response, nil
 }
 
-// CreateModel
+// CreateModel creates a model.
+func (c *Client) CreateModel(ctx context.Context, request CreateModelRequest) (*CreateModelResponse, error) {
+	internalRequest := createModelRequestWithStream{
+		CreateModelRequest: request,
+		Stream:             false,
+	}
+	var response CreateModelResponse
+	if err := c.do(ctx, http.MethodPost, "/create", internalRequest, &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// CreateModelStream streams creating a model.
+func (c *Client) CreateModelStream(ctx context.Context, request CreateModelRequest) iter.Seq2[*CreateModelStatusUpdate, error] {
+	return streamResponse[CreateModelStatusUpdate](func() (*http.Response, error) {
+		internalRequest := createModelRequestWithStream{
+			CreateModelRequest: request,
+			Stream:             true,
+		}
+		return c.executeStream(ctx, http.MethodPost, "/create", internalRequest)
+	}, func(line createModelLine) (*CreateModelStatusUpdate, error) {
+		if line.Message != "" {
+			return nil, &ErrorResponse{Message: line.Message}
+		}
+
+		return &CreateModelStatusUpdate{
+			Status:    line.Status,
+			Digest:    line.Digest,
+			Total:     line.Total,
+			Completed: line.Completed,
+		}, nil
+	}, c.logger)
+}
 
 // CopyModel copies a model.
 func (c *Client) CopyModel(ctx context.Context, request CopyModelRequest) error {

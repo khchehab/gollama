@@ -37,6 +37,7 @@ gollama/
 ├── go.sum                # optional file, may not exist if no external dependencies are used
 ├── CLAUDE.md
 ├── README.md
+├── constants.go          # API constants
 ├── client.go             # Client struct, constructor, post-construction validation
 ├── options.go            # Functional options: WithHostAndPort, WithURL, WithAPIKey, WithTimeout, WithLogger, WithHTTPClient
 ├── types.go              # All request/response structs
