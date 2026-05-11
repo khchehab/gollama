@@ -5,7 +5,7 @@
 Go client library for the Ollama REST API. Targets programmatic use in Go applications.
 
 **Module path:** github.com/khchehab/gollama  
-**Go version:** 1.22  
+**Go version:** 1.23.0  
 **Test framework:** stdlib `testing` only
 
 ## Developer Preferences
@@ -34,7 +34,7 @@ Out of scope (to be tackled later): OpenAI compatibility, Anthropic compatibilit
 ```
 gollama/
 ├── go.mod
-├── go.sum
+├── go.sum                # optional file, may not exist if no external dependencies are used
 ├── CLAUDE.md
 ├── README.md
 ├── client.go             # Client struct, constructor, post-construction validation
@@ -42,6 +42,7 @@ gollama/
 ├── types.go              # All request/response structs
 ├── errors.go             # Typed errors
 ├── endpoints.go          # Endpoint implementations
+├── stream.go             # Stream helper function `streamResponse[T any](resp *http.Response) iter.Seq2[*T, error]`
 ├── stream_test.go        # package gollama       - white-box testing for streamResponse[T]
 └── gollama_test/         # package gollama_test  - black-box
    ├── client_test.go
@@ -68,12 +69,12 @@ gollama/
 
 ## Streaming
 
-- Primary streaming API: `iter.Seq2[T, error]` (Go 1.22 range-over-func).
-- Internal implementation: generic `streamResponse[T any](resp *http.Response) iter.Seq2[T, error]` in `endpoints.go`.
-- Error contract: on error, yield `(zero, err)` and stop iteration.
+- Primary streaming API: `iter.Seq2[*T, error]` (Go 1.23 range-over-func).
+- Internal implementation: generic `streamResponse[T any](resp *http.Response) iter.Seq2[*T, error]` in `stream.go`.
+- Error contract: on error, yield `(nil, err)` and stop iteration.
 - Early cancellation: caller returns `false` from the yield function; iterator exits cleanly.
 - Response body lifecycle: closed via `defer` inside `streamResponse` - caller has no cleanup responsibility.
-- Generate and Chat each have a dedicated streaming method returning `iter.Seq2[T, error]` where `T` is their respective
+- Generate and Chat each have a dedicated streaming method returning `iter.Seq2[*T, error]` where `T` is their respective
   response type.
 
 ## Conventions
@@ -83,6 +84,7 @@ gollama/
 - No global state - all configuration lives on the `Client` struct.
 - `context.Context` must be threaded through every public method.
 - HTTP transport is configurable via `WithHTTPClient` to allow test injection.
+- For streaming, use the `streamClient` in `Client` since it will have a timeout of 0.
 
 ## Testing
 
