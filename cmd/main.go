@@ -14,18 +14,22 @@ func main() {
 		Level: slog.LevelDebug,
 	}))
 
+	logger.Info("Hello World!")
+
 	client, err := gollama.NewClient(gollama.WithLogger(logger))
 	if err != nil {
 		panic(err)
 	}
 
-	response, err := client.ListRunningModels(context.Background())
+	response, err := client.GenerateEmbeddings(context.Background(), gollama.GenerateEmbeddingRequest{
+		Model: "nomic-embed-text:latest",
+		Input: []string{"Query: Hello"},
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("response:", response)
-	fmt.Println("response:", len(response))
 
 	fmt.Println("Done!")
 }

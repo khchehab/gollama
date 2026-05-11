@@ -30,19 +30,38 @@ type GenerateEmbeddingRequest struct {
 	Options GenerateEmbeddingRequestOption `json:"options,omitempty"`
 }
 
+// GenerateEmbeddingRequestOption represents the runtime options that control the text generation.
 type GenerateEmbeddingRequestOption struct {
-	Seed        int      `json:"seed,omitempty"`
-	Temperature float64  `json:"temperature,omitempty"`
-	TopK        int      `json:"top_k,omitempty"`
-	TopP        float64  `json:"top_p,omitempty"`
-	MinP        float64  `json:"min_p,omitempty"`
-	Stop        []string `json:"stop,omitempty"`
-	NumCtx      int      `json:"num_ctx,omitempty"`
-	NumPredict  int      `json:"num_predict,omitempty"`
+	// Seed is the random seed used for reproducible outputs.
+	Seed int `json:"seed,omitempty"`
+	// Temperature controls randomness in generation (higher = more random).
+	Temperature float64 `json:"temperature,omitempty"`
+	// TopK limits next token selection to the K most likely.
+	TopK int `json:"top_k,omitempty"`
+	// TopP is the cumulative probability threshold for nucleus sampling.
+	TopP float64 `json:"top_p,omitempty"`
+	// MinP is the minimum probability threshold for token selection.
+	MinP float64 `json:"min_p,omitempty"`
+	// Stop is the stop sequences that will halt generation.
+	Stop []string `json:"stop,omitempty"`
+	// NumCtx is the context length size (number of tokens).
+	NumCtx int `json:"num_ctx,omitempty"`
+	// NumPredict is the maximum number of tokens to generate.
+	NumPredict int `json:"num_predict,omitempty"`
 }
 
 // GenerateEmbeddingResponse represents the response from the /embed endpoint.
 type GenerateEmbeddingResponse struct {
+	// Model is the model that produced the embeddings
+	Model string `json:"model"`
+	// Embeddings is the array of vector embeddings.
+	Embeddings [][]float64 `json:"embeddings"`
+	// TotalDuration is the total time spent generating in nanoseconds.
+	TotalDuration int `json:"total_duration"`
+	// LoadDuration is the load time in nanoseconds.
+	LoadDuration int `json:"load_duration"`
+	// PromptEvalCount is the number of input tokens processed to generate embeddings.
+	PromptEvalCount int `json:"prompt_eval_count"`
 }
 
 // listModelResponse represents the response from the /tags endpoint.
