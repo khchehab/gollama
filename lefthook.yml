@@ -14,7 +14,7 @@ pre-commit:
     golangci-lint:
       run: golangci-lint run ./...
     mod-tidy:
-      run: go mod tidy && git diff --exit-code go.mod
+      run: go mod tidy && git diff --exit-code go.mod go.sum
 
 pre-push:
   commands:

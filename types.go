@@ -15,6 +15,15 @@ func (e *ErrorResponse) Error() string {
 
 // GenerateResponseRequest represents the request to generate a response.
 type GenerateResponseRequest struct {
+	// Model is the model name.
+	Model string `json:"model"`
+}
+
+// generateResponseRequestWithStream represents the request to generate a response with the stream field (to be filled internally based on calling function).
+type generateResponseRequestWithStream struct {
+	GenerateResponseRequest
+	// Stream to stream progress updates.
+	Stream bool `json:"stream"`
 }
 
 // GenerateResponseResponse represents the response of the generate response function.
@@ -37,10 +46,94 @@ type GenerateResponseResponse struct {
 	LoadDuration time.Duration `json:"load_duration"`
 	// PromptEvalCount is the number of input tokens in the prompt.
 	PromptEvalCount int `json:"prompt_eval_count"`
+	// PromptEvalDuration is the time spent evaluating the prompt.
+	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+	// EvalCount is the number of output tokens generated in the response.
+	EvalCount int `json:"eval_count"`
+	// EvalDuration is the time spent generating tokens.
+	EvalDuration time.Duration `json:"eval_duration"`
+	// Logprobs is the log probability information for the generated tokens when logprobs are enabled.
+	Logprobs []GenerateResponseResponseLogprobs `json:"logprobs"`
+}
+
+// GenerateResponseResponseLogprobs represents the log probability information.
+type GenerateResponseResponseLogprobs struct {
+	// Token is the text representation of the token.
+	Token string `json:"token"`
+	// Logprob is the log probability of this token.
+	Logprob string `json:"logprob"`
+	// Bytes is the raw byte representation of the token.
+	Bytes []byte `json:"bytes"`
+	// TopLogprobs are the most likely tokens and their log probabilities at this position.
+	TopLogprobs []GenerateResponseResponseLogprobsTopLogprobs `json:"top_logprobs"`
+}
+
+// GenerateResponseResponseLogprobsTopLogprobs represents the most likely tokens and their log probabilities.
+type GenerateResponseResponseLogprobsTopLogprobs struct {
+	// Token is the text representation of the token.
+	Token string `json:"token"`
+	// Logprob is the log probability of this token.
+	Logprob string `json:"logprob"`
+	// Bytes is the raw byte representation of the token.
+	Bytes []byte `json:"bytes"`
 }
 
 // GenerateResponseChunk represents a chunk of the generate response functionality.
 type GenerateResponseChunk struct {
+	// Model is the model name.
+	Model string `json:"model"`
+	// CreatedAt is the iSO 8601 timestamp of response creation.
+	CreatedAt string `json:"created_at"`
+	// Response is the the model's generated text response for this chunk.
+	Response string `json:"response"`
+	// Thinking is the the model's generated thinking output for this chunk.
+	Thinking string `json:"thinking"`
+	// Done indicates whether the stream has finished.
+	Done bool `json:"done"`
+	// DoneReason is the reason streaming finished.
+	DoneReason string `json:"done_reason"`
+	// TotalDuration is the time spent generating the response.
+	TotalDuration time.Duration `json:"total_duration"`
+	// LoadDuration is the time spent loading the model.
+	LoadDuration time.Duration `json:"load_duration"`
+	// PromptEvalCount is the number of input tokens in the prompt.
+	PromptEvalCount int `json:"prompt_eval_count"`
+	// PromptEvalDuration is the time spent evaluating the prompt.
+	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+	// EvalCount is the number of output tokens generated in the response.
+	EvalCount int `json:"eval_count"`
+	// EvalDuration is the time spent generating tokens.
+	EvalDuration int `json:"eval_duration"`
+}
+
+// generateResponseChunkLine represents a line of progress during a streamed generate response (can be either a chunk or error response).
+type generateResponseChunkLine struct {
+	// Model is the model name.
+	Model string `json:"model"`
+	// CreatedAt is the iSO 8601 timestamp of response creation.
+	CreatedAt string `json:"created_at"`
+	// Response is the the model's generated text response for this chunk.
+	Response string `json:"response"`
+	// Thinking is the the model's generated thinking output for this chunk.
+	Thinking string `json:"thinking"`
+	// Done indicates whether the stream has finished.
+	Done bool `json:"done"`
+	// DoneReason is the reason streaming finished.
+	DoneReason string `json:"done_reason"`
+	// TotalDuration is the time spent generating the response.
+	TotalDuration time.Duration `json:"total_duration"`
+	// LoadDuration is the time spent loading the model.
+	LoadDuration time.Duration `json:"load_duration"`
+	// PromptEvalCount is the number of input tokens in the prompt.
+	PromptEvalCount int `json:"prompt_eval_count"`
+	// PromptEvalDuration is the time spent evaluating the prompt.
+	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+	// EvalCount is the number of output tokens generated in the response.
+	EvalCount int `json:"eval_count"`
+	// EvalDuration is the time spent generating tokens.
+	EvalDuration int `json:"eval_duration"`
+	// Message is the error message.
+	Message string `json:"error"`
 }
 
 // GenerateChatMessage

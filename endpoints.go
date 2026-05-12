@@ -6,7 +6,48 @@ import (
 	"net/http"
 )
 
-// GenerateResponse
+// GenerateResponse generates a response for the provided prompt.
+func (c *Client) GenerateResponse(ctx context.Context, request GenerateResponseRequest) (*GenerateResponseResponse, error) {
+	internalRequest := generateResponseRequestWithStream{
+		GenerateResponseRequest: request,
+		Stream:                  false,
+	}
+	var response GenerateResponseResponse
+	if err := c.do(ctx, http.MethodPost, "/generate", internalRequest, &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// GenerateResponseStream streams response generation for the provided prompt.
+func (c *Client) GenerateResponseStream(ctx context.Context, request GenerateResponseRequest) iter.Seq2[*GenerateResponseChunk, error] {
+	return streamResponse[GenerateResponseChunk](func() (*http.Response, error) {
+		internalRequest := generateResponseRequestWithStream{
+			GenerateResponseRequest: request,
+			Stream:                  true,
+		}
+		return c.executeStream(ctx, http.MethodPost, "/generate", internalRequest)
+	}, func(line generateResponseChunkLine) (*GenerateResponseChunk, error) {
+		if line.Message != "" {
+			return nil, &ErrorResponse{Message: line.Message}
+		}
+
+		return &GenerateResponseChunk{
+			Model:              line.Model,
+			CreatedAt:          line.CreatedAt,
+			Response:           line.Response,
+			Thinking:           line.Thinking,
+			Done:               line.Done,
+			DoneReason:         line.DoneReason,
+			TotalDuration:      line.TotalDuration,
+			LoadDuration:       line.LoadDuration,
+			PromptEvalCount:    line.PromptEvalCount,
+			PromptEvalDuration: line.PromptEvalDuration,
+			EvalCount:          line.EvalCount,
+			EvalDuration:       line.EvalDuration,
+		}, nil
+	}, c.logger)
+}
 
 // GenerateChatMessage
 

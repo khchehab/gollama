@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	modelName := "nomic-embed-text:latest"
+	modelName := "fauxpaslife/squishy:150m"
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -20,6 +20,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("===")
 
 	stream := client.PullModelStream(context.Background(), gollama.PullModelRequest{
 		Model: modelName,
@@ -32,6 +34,8 @@ func main() {
 
 		fmt.Println("->", update)
 	}
+
+	fmt.Println("===")
 
 	fmt.Println("Done!")
 }
