@@ -13,7 +13,35 @@ func (e *ErrorResponse) Error() string {
 	return e.Message
 }
 
-// GenerateResponse
+// GenerateResponseRequest represents the request to generate a response.
+type GenerateResponseRequest struct {
+}
+
+// GenerateResponseResponse represents the response of the generate response function.
+type GenerateResponseResponse struct {
+	// Model is the model name.
+	Model string `json:"model"`
+	// CreatedAt is the ISO 8601 timestamp of response creation.
+	CreatedAt string `json:"created_at"`
+	// Response is the model's generated text response.
+	Response string `json:"response"`
+	// Thinking is the model's generated thinking output.
+	Thinking string `json:"thinking"`
+	// Done indicates whether generation has finished.
+	Done bool `json:"done"`
+	// DoneReason is the reason the generation stopped.
+	DoneReason string `json:"done_reason"`
+	// TotalDuration is the time spent generating the response.
+	TotalDuration time.Duration `json:"total_duration"`
+	// LoadDuration is the time spent loading the model.
+	LoadDuration time.Duration `json:"load_duration"`
+	// PromptEvalCount is the number of input tokens in the prompt.
+	PromptEvalCount int `json:"prompt_eval_count"`
+}
+
+// GenerateResponseChunk represents a chunk of the generate response functionality.
+type GenerateResponseChunk struct {
+}
 
 // GenerateChatMessage
 
