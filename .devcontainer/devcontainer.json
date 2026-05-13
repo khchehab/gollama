@@ -1,0 +1,53 @@
+{
+	"name": "Go",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "."
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/git-lfs:1": {},
+		"ghcr.io/devcontainers/features/go:1": {},
+		"ghcr.io/prulloac/devcontainer-features/ollama:1": {},
+		"ghcr.io/devcontainers-extra/features/cz-cli:1": {}
+	},
+	"workspaceFolder": "/workspaces/gollama",
+	"postCreateCommand": "go version && gopls version && staticcheck -version && dlv version && goimports -help >/dev/null",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"golang.go",
+				"catppuccin.catppuccin-vsc",
+				"catppuccin.catppuccin-vsc-icons"
+			],
+			"settings": {
+				"workbench.iconTheme": "catppuccin-frappe",
+				"workbench.colorTheme": "Catppuccin Frappé",
+
+				"editor.fontFamily": "Fira Code, monospace",
+				"editor.fontLigatures": false,
+				"editor.fontSize": 16,
+
+				"go.useLanguageServer": true,
+				"go.formatTool": "default",
+				"go.lintTool": "golangci-lint",
+				"go.toolsManagement.autoUpdate": false,
+
+				"[go]": {
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "always"
+                    }
+                },
+
+				"gopls": {
+                    "usePlaceholders": false,
+                    "staticcheck": true,
+                    "ui.diagnostic.analyses": {
+                        "ST1000": false
+                    },
+                    "formatting.gofumpt": true
+                }
+			}
+		}
+	}
+}
