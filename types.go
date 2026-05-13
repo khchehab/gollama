@@ -76,42 +76,42 @@ type GenerateResponseRequest struct {
 	Images []string `json:"images,omitempty"`
 	// Format is a structured output format for the model to generate a response from.
 	// Supports either the string "json" or a JSON schema object.
-	Format *FormatOption `json:"format"` // TODO
+	Format *FormatOption `json:"format,omitempty"`
 	// System is the system prompt for the model to generate a response from.
 	System string `json:"system,omitempty"`
 	// Think when true, returns separate thinking output in addition to content.
 	// Can be a boolean (true/false) or a string ("high", "medium", "low") for supported models.
-	Think *ThinkOption `json:"think"` // TODO
+	Think *ThinkOption `json:"think,omitempty"`
 	// Raw when true, returns the raw response from the model without any prompt templating.
-	Raw bool `json:"raw"`
+	Raw bool `json:"raw,omitempty"`
 	// KeepAlive is the model keep-alive duration (for example 5m or 0 to unload immediately).
-	KeepAlive *KeepAliveOption `json:"keep_alive"` // TODO
+	KeepAlive *KeepAliveOption `json:"keep_alive,omitempty"`
 	// Options is the runtime options that control text generation.
-	Options GenerateResponseRequestOption `json:"options"`
+	Options *GenerateResponseRequestOption `json:"options,omitempty"`
 	// Logprobs is whether to return log probabilities of the output tokens.
-	Logprobs bool `json:"logprobs"`
+	Logprobs bool `json:"logprobs,omitempty"`
 	// TopLogprobs is the number of most likely tokens to return at each token position when Logprobs are enabled.
-	TopLogprobs int `json:"top_logprobs"`
+	TopLogprobs int `json:"top_logprobs,omitempty"`
 }
 
 // GenerateResponseRequestOption represents a runtime option that controls text generation.
 type GenerateResponseRequestOption struct {
 	// Seed is the random seed used for reproducible outputs.
-	Seed int `json:"seed"`
+	Seed int `json:"seed,omitempty"`
 	// Temperature controls randomness in generation (higher = more random).
-	Temperature float64 `json:"temperature"`
+	Temperature float64 `json:"temperature,omitempty"`
 	// TopK limits the next token selection to the K most likely.
-	TopK int `json:"top_k"`
+	TopK int `json:"top_k,omitempty"`
 	// TopP is the cumulative probability threshold for nucleus sampling.
-	TopP float64 `json:"top_p"`
+	TopP float64 `json:"top_p,omitempty"`
 	// MinP is the minimum probability threshold for token selection.
-	MinP float64 `json:"min_p"`
+	MinP float64 `json:"min_p,omitempty"`
 	// Stop is the stop sequences that will halt generation.
-	Stop []string `json:"stop"`
+	Stop []string `json:"stop,omitempty"`
 	// NumCtx is the context length size (number of tokens).
-	NumCtx int `json:"num_ctx"`
+	NumCtx int `json:"num_ctx,omitempty"`
 	// NumPredict is the maximum number of tokens to generate.
-	NumPredict int `json:"num_predict"`
+	NumPredict int `json:"num_predict,omitempty"`
 }
 
 // generateResponseRequestWithStream represents the request to generate a response with the stream field (to be filled internally based on calling function).
@@ -226,7 +226,7 @@ type generateResponseChunkLine struct {
 	// EvalCount is the number of output tokens generated in the response.
 	EvalCount int `json:"eval_count"`
 	// EvalDuration is the time spent generating tokens.
-	EvalDuration int `json:"eval_duration"`
+	EvalDuration time.Duration `json:"eval_duration"`
 	// Message is the error message.
 	Message string `json:"error"`
 }
