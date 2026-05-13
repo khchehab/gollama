@@ -33,3 +33,5 @@ go.work.sum
 .zed/
 
 .DS_Store
+
+cmd/

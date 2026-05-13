@@ -473,7 +473,7 @@ type GenerateEmbeddingRequest struct {
 	// KeepAlive is the model keep-alive duration.
 	KeepAlive string `json:"keep_alive,omitempty"`
 	// Options is the runtime options that control text generation.
-	Options GenerateEmbeddingRequestOption `json:"options,omitempty"`
+	Options *GenerateEmbeddingRequestOption `json:"options,omitempty"`
 }
 
 // GenerateEmbeddingRequestOption represents the runtime options that control the text generation.

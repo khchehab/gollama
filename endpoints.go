@@ -76,10 +76,10 @@ func (c *Client) GenerateChatMessageStream(ctx context.Context, request Generate
 		}
 
 		return &GenerateChatMessageChunk{
-			Model: line.Model,
+			Model:     line.Model,
 			CreatedAt: line.CreatedAt,
-			Message: line.Message,
-			Done: line.Done,
+			Message:   line.Message,
+			Done:      line.Done,
 		}, nil
 	}, c.logger)
 }

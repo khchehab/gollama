@@ -5,7 +5,7 @@
 Go client library for the Ollama REST API. Targets programmatic use in Go applications.
 
 **Module path:** github.com/khchehab/gollama  
-**Go version:** 1.23.0  
+**Go version:** 1.26.0
 **Test framework:** stdlib `testing` only
 
 ## Developer Preferences
