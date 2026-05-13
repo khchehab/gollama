@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"iter"
 	"log/slog"
@@ -54,6 +55,8 @@ func streamResponse[T any, L any](responseExec func() (*http.Response, error), m
 				continue
 			}
 
+			fmt.Println("==>", string(b))
+
 			var line L
 			if err = json.Unmarshal(b, &line); err != nil {
 				yield(nil, err)
@@ -65,6 +68,9 @@ func streamResponse[T any, L any](responseExec func() (*http.Response, error), m
 				yield(nil, err)
 				return
 			}
+
+			t, _ := json.Marshal(r)
+			fmt.Println("==>", string(t))
 
 			if !yield(r, nil) {
 				return

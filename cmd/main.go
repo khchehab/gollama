@@ -37,5 +37,20 @@ func main() {
 
 	fmt.Println("===")
 
+	stream2 := client.GenerateChatMessageStream(context.Background(), gollama.GenerateChatMessageRequest{
+		Model: modelName,
+		Messages: []gollama.GenerateChatMessageRequestMessage{
+			{Role: gollama.RoleUser, Content: "Why is the sky blue?"},
+		},
+	})
+
+	for update2, streamErr2 := range stream2 {
+		if streamErr2 != nil {
+			panic(streamErr2)
+		}
+
+		fmt.Println("->", update2)
+	}
+
 	fmt.Println("Done!")
 }

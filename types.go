@@ -231,7 +231,234 @@ type generateResponseChunkLine struct {
 	Message string `json:"error"`
 }
 
-// GenerateChatMessage
+// GenerateChatMessageRequest represents the request to generate a chat message.
+type GenerateChatMessageRequest struct {
+	// Model is the model name.
+	Model string `json:"model"`
+	// Messages is the chat history as an array of message objects (each with a role and content).
+	Messages []GenerateChatMessageRequestMessage `json:"messages"`
+	// Tools is the optional list of function tools the model may call during the chat.
+	Tools []GenerateChatMessageRequestTool `json:"tools,omitempty"`
+	// Format is the format to return a response in.
+	// Can be json (map or dictionary) or a JSON schema.
+	Format *FormatOption `json:"format,omitempty"`
+	// Options is the runtime options that control text generation.
+	Options *GenerateChatMessageRequestOption `json:"options,omitempty"`
+	// Think when true, returns separate thinking output in addition to content.
+	// Can be a boolean (true/false) or a string ("high", "medium", "low") for supported models.
+	Think *ThinkOption `json:"think,omitempty"`
+	// KeepAlive is the model keep-alive duration (for example 5m or 0 to unload immediately).
+	KeepAlive *KeepAliveOption `json:"keep_alive,omitempty"`
+	// Logprobs is whether to return log probabilities of the output tokens.
+	Logprobs bool `json:"logprobs,omitempty"`
+	// TopLogprobs is the number of most likely tokens to return at each token position when Logprobs are enabled.
+	TopLogprobs int `json:"top_logprobs,omitempty"`
+}
+
+// GenerateChatMessageRequestMessage represents a message history to use for the model.
+type GenerateChatMessageRequestMessage struct {
+	// Role is the author of the message.
+	Role MessageRole `json:"role"`
+	// Content is the message text content.
+	Content string `json:"content"`
+	// Images is an optional list of inline images for multimodal models.
+	// Each item will be a base64-encoded image content.
+	Images []string `json:"images,omitempty"`
+	// ToolCalls is the tool call requests produced by the model.
+	ToolCalls []GenerateChatMessageRequestMessageToolCall `json:"tool_calls,omitempty"`
+}
+
+// GenerateChatMessageRequestMessageToolCall represents a message tool call.
+type GenerateChatMessageRequestMessageToolCall struct {
+	// Function is the function call details.
+	Function GenerateChatMessageRequestMessageToolCallFunction `json:"function"`
+}
+
+// GenerateChatMessageRequestMessageToolCallFunction represents the function call details.
+type GenerateChatMessageRequestMessageToolCallFunction struct {
+	// Name of the function to call.
+	Name string `json:"name"`
+	// Description is what the function does.
+	Description string `json:"description,omitempty"`
+	// Arguments is a map of arguments to pass to the function.
+	Arguments map[string]any `json:"arguments,omitempty"`
+}
+
+// GenerateChatMessageRequestTool represents a tool used during chat.
+type GenerateChatMessageRequestTool struct {
+	Type     ToolType                               `json:"type"`
+	Function GenerateChatMessageRequestToolFunction `json:"function"`
+}
+
+// GenerateChatMessageRequestToolFunction represents a function used by a tool.
+type GenerateChatMessageRequestToolFunction struct {
+	Name        string         `json:"name"`
+	Parameters  map[string]any `json:"parameters"`
+	Description string         `json:"description,omitempty"`
+}
+
+// GenerateChatMessageRequestOption represents the runtime options that control the text generation.
+type GenerateChatMessageRequestOption struct {
+	// Seed is the random seed used for reproducible outputs.
+	Seed int `json:"seed,omitempty"`
+	// Temperature controls randomness in generation (higher = more random).
+	Temperature float64 `json:"temperature,omitempty"`
+	// TopK limits the next token selection to the K most likely.
+	TopK int `json:"top_k,omitempty"`
+	// TopP is the cumulative probability threshold for nucleus sampling.
+	TopP float64 `json:"top_p,omitempty"`
+	// MinP is the minimum probability threshold for token selection.
+	MinP float64 `json:"min_p,omitempty"`
+	// Stop is the stop sequences that will halt generation.
+	Stop []string `json:"stop,omitempty"`
+	// NumCtx is the context length size (number of tokens).
+	NumCtx int `json:"num_ctx,omitempty"`
+	// NumPredict is the maximum number of tokens to generate.
+	NumPredict int `json:"num_predict,omitempty"`
+}
+
+// generateResponseRequestWithStream represents the request to generate a chat message with the stream field (to be filled internally based on calling function).
+type generateChatMessageRequestWithStream struct {
+	GenerateChatMessageRequest
+	// Stream to stream progress updates.
+	Stream bool `json:"stream"`
+}
+
+// GenerateChatMessageResponse represents the response of the generate chat message function.
+type GenerateChatMessageResponse struct {
+	// Model is the model name used to generate this message.
+	Model string `json:"model"`
+	// CreatedAt is the ISO 8601 timestamp of response creation.
+	CreatedAt string `json:"created_at"`
+	// Message is the chat's message.
+	Message GenerateChatMessageResponseMessage `json:"message"`
+	// Done indicates whether the chat response has finished.
+	Done bool `json:"done"`
+	// DoneReason is the reason the response finished.
+	DoneReason string `json:"done_reason"`
+	// TotalDuration is the total time spent generating.
+	TotalDuration time.Duration `json:"total_duration"`
+	// LoadDuration is the time spent loading the model.
+	LoadDuration time.Duration `json:"load_duration"`
+	// PromptEvalCount is the number of tokens in the prompt.
+	PromptEvalCount int `json:"prompt_eval_count"`
+	// PromptEvalDuration is the time spent evaluating the prompt.
+	PromptEvalDuration time.Duration `json:"prompt_eval_duration"`
+	// EvalCount is the number of tokens generated in the response.
+	EvalCount int `json:"eval_count"`
+	// EvalDuration is the time spent generating tokens.
+	EvalDuration time.Duration `json:"eval_duration"`
+	// Logprobs is the log probability information for the generated tokens when logprobs are enabled.
+	Logprobs []GenerateChatMessageResponseLogprobs `json:"logprobs"`
+}
+
+// GenerateChatMessageResponseMessage represents the generate chat message.
+type GenerateChatMessageResponseMessage struct {
+	// Role is always "assistant" for model responses.
+	Role ChatMessageRole `json:"role"`
+	// Content is the assistant message text.
+	Content string `json:"content"`
+	// Thinking is the optional deliberate thinking trace when think is enabled.
+	Thinking string `json:"thinking"`
+	// ToolCalls is the tool calls requested by the assistant.
+	ToolCalls []GenerateChatMessageResponseMessageToolCall `json:"tool_calls"`
+	// Images is the optional base64-encoded images in the response.
+	Images []string `json:"images"`
+}
+
+// GenerateChatMessageResponseMessageToolCall represents a message tool call.
+type GenerateChatMessageResponseMessageToolCall struct {
+	// Function is the function call details.
+	Function GenerateChatMessageResponseMessageToolCallFunction `json:"function"`
+}
+
+// GenerateChatMessageResponseMessageToolCallFunction represents the function call details.
+type GenerateChatMessageResponseMessageToolCallFunction struct {
+	// Name of the function to call.
+	Name string `json:"name"`
+	// Description is what the function does.
+	Description string `json:"description"`
+	// Arguments is a map of arguments to pass to the function.
+	Arguments map[string]any `json:"arguments"`
+}
+
+// GenerateChatMessageResponseLogprobs represents the log probability information.
+type GenerateChatMessageResponseLogprobs struct {
+	// Token is the text representation of the token.
+	Token string `json:"token"`
+	// Logprob is the log probability of this token.
+	Logprob string `json:"logprob"`
+	// Bytes is the raw byte representation of the token.
+	Bytes []byte `json:"bytes"`
+	// TopLogprobs are the most likely tokens and their log probabilities at this position.
+	TopLogprobs []GenerateChatMessageResponseLogprobsTopLogprobs `json:"top_logprobs"`
+}
+
+// GenerateChatMessageResponseLogprobsTopLogprobs represents the most likely tokens and their log probabilities.
+type GenerateChatMessageResponseLogprobsTopLogprobs struct {
+	// Token is the text representation of the token.
+	Token string `json:"token"`
+	// Logprob is the log probability of this token.
+	Logprob string `json:"logprob"`
+	// Bytes is the raw byte representation of the token.
+	Bytes []byte `json:"bytes"`
+}
+
+// GenerateChatMessageChunk represents a chunk of the generate chat message functionality.
+type GenerateChatMessageChunk struct {
+	// Model is the model name used for this stream event.
+	Model string `json:"model"`
+	// CreatedAt is when this chunk was created (ISO 8601).
+	CreatedAt string `json:"created_at"`
+	// Message is the chunk's message.
+	Message GenerateChatMessageChunkMessage `json:"message"`
+	// Done is true for the final event in the stream.
+	Done bool `json:"done"`
+}
+
+// GenerateChatMessageChunkMessage represents the generate chat chunk message.
+type GenerateChatMessageChunkMessage struct {
+	// Role is the role of the message for this chunk.
+	Role string `json:"role"`
+	// Content is the partial assistant message text.
+	Content string `json:"content"`
+	// Thinking is the partial thinking text when think is enabled.
+	Thinking string `json:"thinking"`
+	// ToolCalls is the partial tool calls, if any.
+	ToolCalls []GenerateChatMessageChunkMessageToolCall `json:"tool_calls"`
+	// Images is the partial base64-encoded images, when present.
+	Images []string `json:"images"`
+}
+
+// GenerateChatMessageChunkMessageToolCall represents a message tool call.
+type GenerateChatMessageChunkMessageToolCall struct {
+	// Function is the function call details.
+	Function GenerateChatMessageChunkMessageToolCallFunction `json:"function"`
+}
+
+// GenerateChatMessageChunkMessageToolCallFunction represents the function call details.
+type GenerateChatMessageChunkMessageToolCallFunction struct {
+	// Name of the function to call.
+	Name string `json:"name"`
+	// Description is what the function does.
+	Description string `json:"description"`
+	// Arguments is a map of arguments to pass to the function.
+	Arguments map[string]any `json:"arguments"`
+}
+
+// generateChatMessageChunkLine represents a line of progress during a streamed generate chat message (can be either a chunk or error response).
+type generateChatMessageChunkLine struct {
+	// Model is the model name used for this stream event.
+	Model string `json:"model"`
+	// CreatedAt is when this chunk was created (ISO 8601).
+	CreatedAt string `json:"created_at"`
+	// Message is the chunk's message.
+	Message GenerateChatMessageChunkMessage `json:"message"`
+	// Done is true for the final event in the stream.
+	Done bool `json:"done"`
+	// ErrorMessage is the error message.
+	ErrorMessage string `json:"error"`
+}
 
 // GenerateEmbeddingRequest represent the request to generate an embedding.
 type GenerateEmbeddingRequest struct {

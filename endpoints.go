@@ -49,7 +49,40 @@ func (c *Client) GenerateResponseStream(ctx context.Context, request GenerateRes
 	}, c.logger)
 }
 
-// GenerateChatMessage
+// GenerateChatMessage generates the next chat message in a conversation between a user and an assistant.
+func (c *Client) GenerateChatMessage(ctx context.Context, request GenerateChatMessageRequest) (*GenerateChatMessageResponse, error) {
+	internalRequest := generateChatMessageRequestWithStream{
+		GenerateChatMessageRequest: request,
+		Stream:                     false,
+	}
+	var response GenerateChatMessageResponse
+	if err := c.do(ctx, http.MethodPost, "/chat", internalRequest, &response); err != nil {
+		return nil, err
+	}
+	return &response, nil
+}
+
+// GenerateChatMessageStream stream generate the next chat message in a conversation between a user and an assistant.
+func (c *Client) GenerateChatMessageStream(ctx context.Context, request GenerateChatMessageRequest) iter.Seq2[*GenerateChatMessageChunk, error] {
+	return streamResponse[GenerateChatMessageChunk](func() (*http.Response, error) {
+		internalRequest := generateChatMessageRequestWithStream{
+			GenerateChatMessageRequest: request,
+			Stream:                     true,
+		}
+		return c.executeStream(ctx, http.MethodPost, "/chat", internalRequest)
+	}, func(line generateChatMessageChunkLine) (*GenerateChatMessageChunk, error) {
+		if line.ErrorMessage != "" {
+			return nil, &ErrorResponse{Message: line.ErrorMessage}
+		}
+
+		return &GenerateChatMessageChunk{
+			Model: line.Model,
+			CreatedAt: line.CreatedAt,
+			Message: line.Message,
+			Done: line.Done,
+		}, nil
+	}, c.logger)
+}
 
 // GenerateEmbeddings creates vector embeddings representing the input text.
 func (c *Client) GenerateEmbeddings(ctx context.Context, request GenerateEmbeddingRequest) (*GenerateEmbeddingResponse, error) {
