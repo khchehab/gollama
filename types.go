@@ -1,6 +1,9 @@
 package gollama
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // ErrorResponse represents an error response from the Ollama API.
 type ErrorResponse struct {
@@ -13,10 +16,102 @@ func (e *ErrorResponse) Error() string {
 	return e.Message
 }
 
+type ThinkOption struct {
+	value any
+}
+
+func ThinkBool(v bool) ThinkOption {
+	return ThinkOption{value: v}
+}
+
+func ThinkWithLevel(v ThinkLevel) ThinkOption {
+	return ThinkOption{value: v}
+}
+
+func (t ThinkOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.value)
+}
+
+type KeepAliveOption struct {
+	value any
+}
+
+func KeepAliveDuration(s string) KeepAliveOption {
+	return KeepAliveOption{value: s}
+}
+
+func KeepAliveSeconds(s int) KeepAliveOption {
+	return KeepAliveOption{value: s}
+}
+
+func (k KeepAliveOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.value)
+}
+
+type FormatOption struct {
+	value any
+}
+
+func FormatWithType(v FormatType) FormatOption {
+	return FormatOption{value: v}
+}
+
+func FormatWithSchema(v json.RawMessage) FormatOption {
+	return FormatOption{value: v}
+}
+
+func (f FormatOption) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.value)
+}
+
 // GenerateResponseRequest represents the request to generate a response.
 type GenerateResponseRequest struct {
 	// Model is the model name.
 	Model string `json:"model"`
+	// Prompt is the text for the model to generate a response from.
+	Prompt string `json:"prompt,omitempty"`
+	// Suffix is used for fill-in-the-middle models, text that appears after the user prompt and before the model response.
+	Suffix string `json:"suffix,omitempty"`
+	// Images is base64-encoded images for models that support image input.
+	Images []string `json:"images,omitempty"`
+	// Format is a structured output format for the model to generate a response from.
+	// Supports either the string "json" or a JSON schema object.
+	Format *FormatOption `json:"format"` // TODO
+	// System is the system prompt for the model to generate a response from.
+	System string `json:"system,omitempty"`
+	// Think when true, returns separate thinking output in addition to content.
+	// Can be a boolean (true/false) or a string ("high", "medium", "low") for supported models.
+	Think *ThinkOption `json:"think"` // TODO
+	// Raw when true, returns the raw response from the model without any prompt templating.
+	Raw bool `json:"raw"`
+	// KeepAlive is the model keep-alive duration (for example 5m or 0 to unload immediately).
+	KeepAlive *KeepAliveOption `json:"keep_alive"` // TODO
+	// Options is the runtime options that control text generation.
+	Options GenerateResponseRequestOption `json:"options"`
+	// Logprobs is whether to return log probabilities of the output tokens.
+	Logprobs bool `json:"logprobs"`
+	// TopLogprobs is the number of most likely tokens to return at each token position when Logprobs are enabled.
+	TopLogprobs int `json:"top_logprobs"`
+}
+
+// GenerateResponseRequestOption represents a runtime option that controls text generation.
+type GenerateResponseRequestOption struct {
+	// Seed is the random seed used for reproducible outputs.
+	Seed int `json:"seed"`
+	// Temperature controls randomness in generation (higher = more random).
+	Temperature float64 `json:"temperature"`
+	// TopK limits the next token selection to the K most likely.
+	TopK int `json:"top_k"`
+	// TopP is the cumulative probability threshold for nucleus sampling.
+	TopP float64 `json:"top_p"`
+	// MinP is the minimum probability threshold for token selection.
+	MinP float64 `json:"min_p"`
+	// Stop is the stop sequences that will halt generation.
+	Stop []string `json:"stop"`
+	// NumCtx is the context length size (number of tokens).
+	NumCtx int `json:"num_ctx"`
+	// NumPredict is the maximum number of tokens to generate.
+	NumPredict int `json:"num_predict"`
 }
 
 // generateResponseRequestWithStream represents the request to generate a response with the stream field (to be filled internally based on calling function).
@@ -84,9 +179,9 @@ type GenerateResponseChunk struct {
 	Model string `json:"model"`
 	// CreatedAt is the iSO 8601 timestamp of response creation.
 	CreatedAt string `json:"created_at"`
-	// Response is the the model's generated text response for this chunk.
+	// Response is the model's generated text response for this chunk.
 	Response string `json:"response"`
-	// Thinking is the the model's generated thinking output for this chunk.
+	// Thinking is the model's generated thinking output for this chunk.
 	Thinking string `json:"thinking"`
 	// Done indicates whether the stream has finished.
 	Done bool `json:"done"`
@@ -103,7 +198,7 @@ type GenerateResponseChunk struct {
 	// EvalCount is the number of output tokens generated in the response.
 	EvalCount int `json:"eval_count"`
 	// EvalDuration is the time spent generating tokens.
-	EvalDuration int `json:"eval_duration"`
+	EvalDuration time.Duration `json:"eval_duration"`
 }
 
 // generateResponseChunkLine represents a line of progress during a streamed generate response (can be either a chunk or error response).
@@ -145,33 +240,33 @@ type GenerateEmbeddingRequest struct {
 	// Input is the array of texts to generate embeddings for.
 	Input []string `json:"input"`
 	// Truncate if true, truncate inputs that exceed the context window. If false, returns an error.
-	Truncate bool `json:"truncate"`
+	Truncate *bool `json:"truncate,omitempty"`
 	// Dimensions is the number of dimensions to generate embeddings for.
-	Dimensions int `json:"dimensions"`
+	Dimensions int `json:"dimensions,omitempty"`
 	// KeepAlive is the model keep-alive duration.
-	KeepAlive string `json:"keep_alive"`
+	KeepAlive string `json:"keep_alive,omitempty"`
 	// Options is the runtime options that control text generation.
-	Options GenerateEmbeddingRequestOption `json:"options"`
+	Options GenerateEmbeddingRequestOption `json:"options,omitempty"`
 }
 
 // GenerateEmbeddingRequestOption represents the runtime options that control the text generation.
 type GenerateEmbeddingRequestOption struct {
 	// Seed is the random seed used for reproducible outputs.
-	Seed int `json:"seed"`
+	Seed int `json:"seed,omitempty"`
 	// Temperature controls randomness in generation (higher = more random).
-	Temperature float64 `json:"temperature"`
+	Temperature float64 `json:"temperature,omitempty"`
 	// TopK limits the next token selection to the K most likely.
-	TopK int `json:"top_k"`
+	TopK int `json:"top_k,omitempty"`
 	// TopP is the cumulative probability threshold for nucleus sampling.
-	TopP float64 `json:"top_p"`
+	TopP float64 `json:"top_p,omitempty"`
 	// MinP is the minimum probability threshold for token selection.
-	MinP float64 `json:"min_p"`
+	MinP float64 `json:"min_p,omitempty"`
 	// Stop is the stop sequences that will halt generation.
-	Stop []string `json:"stop"`
+	Stop []string `json:"stop,omitempty"`
 	// NumCtx is the context length size (number of tokens).
-	NumCtx int `json:"num_ctx"`
+	NumCtx int `json:"num_ctx,omitempty"`
 	// NumPredict is the maximum number of tokens to generate.
-	NumPredict int `json:"num_predict"`
+	NumPredict int `json:"num_predict,omitempty"`
 }
 
 // GenerateEmbeddingResponse represents the response from generating an embedding.
@@ -259,7 +354,7 @@ type ShowModelDetailsRequest struct {
 	// Model is the model name to show.
 	Model string `json:"model"`
 	// Verbose, if true, includes large verbose fields in the response.
-	Verbose bool `json:"verbose"`
+	Verbose bool `json:"verbose,omitempty"`
 }
 
 // ShowModelDetailsResponse represents the response from getting model details.
@@ -285,19 +380,19 @@ type CreateModelRequest struct {
 	// Model is the name of the model to create.
 	Model string `json:"model"`
 	// From is the existing model to create from.
-	From string `json:"from"`
+	From string `json:"from,omitempty"`
 	// Template is the prompt template to use for the model.
-	Template string `json:"template"`
+	Template string `json:"template,omitempty"`
 	// License is the list of licenses for the model.
-	License []string `json:"license"`
+	License []string `json:"license,omitempty"`
 	// System is the system prompt to embed in the model.
-	System string `json:"system"`
+	System string `json:"system,omitempty"`
 	// Parameters is the key-value parameters for the model.
-	Parameters map[string]any `json:"parameters"`
+	Parameters map[string]any `json:"parameters,omitempty"`
 	// Messages is the message history to use for the model.
-	Messages []CreateModelRequestMessage `json:"messages"`
+	Messages []CreateModelRequestMessage `json:"messages,omitempty"`
 	// Quantize is the quantization level to apply (e.g. q4_K_M, q8_0).
-	Quantize string `json:"quantize"`
+	Quantize string `json:"quantize,omitempty"`
 }
 
 // CreateModelRequestMessage represents a message history to use for the model.
@@ -308,9 +403,9 @@ type CreateModelRequestMessage struct {
 	Content string `json:"content"`
 	// Images is an optional list of inline images for multimodal models.
 	// Each item will be a base64-encoded image content.
-	Images []string `json:"images"`
+	Images []string `json:"images,omitempty"`
 	// ToolCalls is the tool call requests produced by the model.
-	ToolCalls []CreateModelRequestMessageToolCall `json:"tool_calls"`
+	ToolCalls []CreateModelRequestMessageToolCall `json:"tool_calls,omitempty"`
 }
 
 // CreateModelRequestMessageToolCall represents a message tool call.
@@ -324,9 +419,9 @@ type CreateModelRequestMessageToolCallFunction struct {
 	// Name of the function to call.
 	Name string `json:"name"`
 	// Description is what the function does.
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 	// Arguments is a map of arguments to pass to the function.
-	Arguments map[string]any `json:"arguments"`
+	Arguments map[string]any `json:"arguments,omitempty"`
 }
 
 // createModelRequestWithStream represents the request to create a model with the stream field (to be filled internally based on calling function).
@@ -381,7 +476,7 @@ type PullModelRequest struct {
 	// Model is the name of the model to download.
 	Model string `json:"model"`
 	// Insecure allows downloading over insecure connections.
-	Insecure bool `json:"insecure"`
+	Insecure bool `json:"insecure,omitempty"`
 }
 
 // pullModelRequestWithStream represents the request to pull a model with the stream field (to be filled internally based on calling function).
@@ -428,7 +523,7 @@ type PushModelRequest struct {
 	// Model is the name of the model to publish.
 	Model string `json:"model"`
 	// Insecure allows publishing over insecure connections.
-	Insecure bool `json:"insecure"`
+	Insecure bool `json:"insecure,omitempty"`
 }
 
 // pushModelRequestWithStream represents the request to push a model with the stream field (to be filled internally based on calling function).
